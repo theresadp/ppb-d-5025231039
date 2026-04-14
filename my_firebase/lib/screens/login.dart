@@ -36,12 +36,15 @@ class _LoginScreenState extends State<LoginScreen> {
         email: _emailController.text,
         password: _passwordController.text,
       );
-      navigateHome();
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(context, 'home');
     } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorCode = e.code;
       });
     }
+    if (!mounted) return;
 
     setState(() {
       _isLoading = false;

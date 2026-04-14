@@ -5,10 +5,11 @@ class FirestoreService{
   final CollectionReference notes = FirebaseFirestore.instance.collection('notes');
 
   //create new note
-  Future<void> addNote(String title, String content) {
+  Future<void> addNote(String title, String content, String label) {
     return notes.add({
       'title': title,
       'content': content,
+      'label': label,
       'createdAt': Timestamp.now(),
     });
   }
@@ -19,11 +20,12 @@ class FirestoreService{
   }
 
   //update notes
-  Future<void> updateNote(String id, String title, String content) {
+  Future<void> updateNote(String id, String title, String content, String label) {
     return notes.doc(id).update({
       'title': title,
       'content': content,
-      'createdAt': Timestamp.now(),
+      'label': label,
+      'updatedAt': Timestamp.now(),
     });
   }
 
