@@ -1,4 +1,3 @@
-import 'package:my_firebase/screens/home.dart';
 import 'package:my_firebase/screens/login.dart';
 import 'package:my_firebase/screens/register.dart';
 import 'package:my_firebase/homepage.dart';

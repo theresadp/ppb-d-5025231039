@@ -97,7 +97,7 @@ class _HomePageState extends State<HomePage> {
         child: const Icon(Icons.add),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: firestoreService.getNotes(),
+        stream: firestoreService.getNotesByUser(FirebaseAuth.instance.currentUser!.uid,),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             List notesList = snapshot.data!.docs;

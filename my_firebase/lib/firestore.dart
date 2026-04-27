@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class FirestoreService{
 
@@ -11,12 +12,23 @@ class FirestoreService{
       'content': content,
       'label': label,
       'createdAt': Timestamp.now(),
+      'userId': FirebaseAuth.instance.currentUser!.uid,
     });
   }
 
   //fetch all notes
-  Stream<QuerySnapshot> getNotes() {
-    return notes.orderBy('createdAt', descending: true).snapshots();
+  Stream<QuerySnapshot> getNotesByUser(String userId) {
+  return notes
+      .where('userId', isEqualTo: userId)
+      .orderBy('createdAt', descending: true)
+      .snapshots();
+  }
+
+  Future<DocumentSnapshot> getUserById(String userId) {
+  return FirebaseFirestore.instance
+      .collection('users')
+      .doc(userId)
+      .get();
   }
 
   //update notes
