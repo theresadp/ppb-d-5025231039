@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
 import 'package:my_mini_project/screens/leaderboard.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -32,6 +33,33 @@ class _GameScreenState extends State<GameScreen> {
 
   StreamSubscription? audioSubscription;
 
+  final FlutterLocalNotificationsPlugin notificationsPlugin =
+  FlutterLocalNotificationsPlugin();
+
+  @override
+  void initState() {
+    super.initState();
+
+    requestNotifPermission();
+
+    const AndroidInitializationSettings androidSettings =
+    AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const InitializationSettings settings =
+    InitializationSettings(android: androidSettings);
+
+    notificationsPlugin.initialize(
+      settings: settings,
+    );
+  }
+
+  Future<void> requestNotifPermission() async {
+    await notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>()
+        ?.requestNotificationsPermission();
+  }
+
   // 🎵 Play tone
   void playTone() async {
     await player.play(AssetSource('audio/tone_440.wav'));
@@ -54,7 +82,7 @@ class _GameScreenState extends State<GameScreen> {
         ),
       );
 
-      listenToAudio(); // 🔥 penting
+      listenToAudio();
 
       setState(() {
         isRecording = true;
@@ -66,13 +94,14 @@ class _GameScreenState extends State<GameScreen> {
   Future<void> stopRecording() async {
     await recorder.stop();
     await audioSubscription?.cancel();
+    await showNotification();
 
     setState(() {
       isRecording = false;
     });
 
     if (detectedPitch != null && score != null) {
-      await saveScoreToFirestore();
+      await saveOrUpdateScore();
     }
   }
 
@@ -122,19 +151,66 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
-  Future<void> saveScoreToFirestore() async {
+  Future<void> saveOrUpdateScore() async {
     final user = FirebaseAuth.instance.currentUser;
+    if (user == null || score == null) return;
 
-    if (user == null || detectedPitch == null || score == null) return;
+    final docRef = FirebaseFirestore.instance
+        .collection('scores')
+        .doc(user.uid);
 
-    await FirebaseFirestore.instance.collection('scores').add({
-      'userId': user.uid,
-      'email': user.email,
-      'targetPitch': targetPitch,
-      'userPitch': detectedPitch,
-      'score': score,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
+    final doc = await docRef.get();
+
+    if (doc.exists) {
+      final oldScore = doc.data()!['score'];
+
+      if (score! > oldScore) {
+        await docRef.update({
+          'score': score,
+          'userPitch': detectedPitch,
+          'lastPlayed': FieldValue.serverTimestamp(),
+        });
+
+        print("UPDATED (new high score)");
+      } else {
+        await docRef.update({
+          'lastPlayed': FieldValue.serverTimestamp(),
+        });
+
+        print("No update (score lower)");
+      }
+    } else {
+      await docRef.set({
+        'userId': user.uid,
+        'email': user.email,
+        'score': score,
+        'targetPitch': targetPitch,
+        'userPitch': detectedPitch,
+        'lastPlayed': FieldValue.serverTimestamp(),
+      });
+
+      print("CREATED new score");
+    }
+  }
+
+  Future<void> showNotification() async {
+    const AndroidNotificationDetails androidDetails =
+    AndroidNotificationDetails(
+      'pitch_channel',
+      'Pitch Notifications',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+
+    const NotificationDetails details =
+    NotificationDetails(android: androidDetails);
+
+    await notificationsPlugin.show(
+      id: 0,
+      title: 'PitchMatch 🎵',
+      body: 'Kamu sudah latihan hari ini 🎯',
+      notificationDetails: details,
+    );
   }
 
   @override

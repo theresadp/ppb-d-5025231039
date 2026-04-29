@@ -4,6 +4,7 @@ import 'firebase_options.dart';
 import 'package:my_mini_project/screens/home.dart';
 import 'package:my_mini_project/screens/login.dart';
 import 'package:my_mini_project/screens/register.dart';
+import 'package:my_mini_project/screens/game.dart';
 
 void main() async {
    WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +23,7 @@ class MyApp extends StatelessWidget {
       'home': (context) => const HomeScreen(),
       'login': (context) => const LoginScreen(),
       'register': (context) => const RegisterScreen(),
+      'game': (context) => const GameScreen(),
     });
   }
 }

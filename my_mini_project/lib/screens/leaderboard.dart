@@ -46,18 +46,29 @@ class LeaderboardScreen extends StatelessWidget {
                     email,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  subtitle: Text("Pitch: ${pitch.toStringAsFixed(1)} Hz"),
-                  trailing: Text(
-                    "${score.toStringAsFixed(0)}%",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: score >= 90
-                          ? Colors.green
-                          : score >= 70
-                          ? Colors.orange
-                          : Colors.red,
-                    ),
+                  subtitle: Text("Best Pitch: ${pitch.toStringAsFixed(1)} Hz"),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "${score.toStringAsFixed(0)}%",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: score >= 90
+                              ? Colors.green
+                              : score >= 70
+                              ? Colors.orange
+                              : Colors.red,
+                        ),
+                      ),
+
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () async {
+                          await data.reference.delete();
+                        },
+                      ),
+                    ],
                   ),
                 ),
               );
